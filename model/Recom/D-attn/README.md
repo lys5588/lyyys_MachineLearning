@@ -8,3 +8,7 @@ was only used for a personal project.
 
 ## Getting Started
 This implementation has been tested on UNIX systems, install [PyTorch](https://pytorch.org) to get started
+
+## dataset
+1. yelp https://www.kaggle.com/c/yelp-recsys-2013
+2. amazon http://jmcauley.ucsd.edu/data/amazon/
