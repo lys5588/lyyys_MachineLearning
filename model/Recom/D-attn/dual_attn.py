@@ -13,8 +13,7 @@ def get_loader(dataset, batch_size=100, shuffle=True, num_workers=2):
 
     data_loader = DataLoader(dataset=dataset,
                                   batch_size=batch_size,
-                                  shuffle=shuffle,
-                                  num_workers=num_workers)
+                                  shuffle=shuffle)
     return data_loader
 
 def d_attn(train_data,valid_data,test_data,D_all):
@@ -34,7 +33,8 @@ def d_attn(train_data,valid_data,test_data,D_all):
     print("train/val/test/: {:d}/{:d}/{:d}".format(len(train_loader), len(valid_loader), len(test_loader)))
     print("==================================================================================")
 
-    cnndlga = CNNDLGA(input_size)
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    cnndlga = CNNDLGA(input_size,device=device)
 
     if torch.cuda.is_available():
         cnndlga.cuda()
@@ -58,13 +58,15 @@ def d_attn(train_data,valid_data,test_data,D_all):
             user_seq=[]
             for id in user.numpy():
                 user_seq.append(X_user[id])
-            user=torch.Tensor(user_seq)
+            user=torch.Tensor(np.array(user_seq))
             item_seq = []
             for id in item.numpy():
                 item_seq.append(X_item[id])
-            item=torch.Tensor(item_seq)
+            item=torch.Tensor(np.array(item_seq))
 
-            labels = labels
+            if torch.cuda.is_available():
+                user=user.to(device)
+                item=item.to(device)
 
             # Forward + Backward + Optimize
             optimizer.zero_grad()  # zero the gradient buffer
@@ -90,13 +92,18 @@ def d_attn(train_data,valid_data,test_data,D_all):
     print("==================================================================================")
     print("Testing Start..")
 
-    for i, (user, item, labels) in enumerate(val_loader):
+    for i, (user, item, labels) in enumerate(valid_loader):
 
         # Convert torch tensor to Variable
         batch_size = len(user)
-        user = to_var(user)
-        item = to_var(item)
-        labels = to_var(labels)
+        user_seq = []
+        for id in user.numpy():
+            user_seq.append(X_user[id])
+        user = torch.Tensor(user_seq)
+        item_seq = []
+        for id in item.numpy():
+            item_seq.append(X_item[id])
+        item = torch.Tensor(item_seq)
 
         outputs = cnndlga(user, item)
         if i == 0:
